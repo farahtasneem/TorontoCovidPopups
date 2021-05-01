@@ -1,0 +1,315 @@
+<!--The doctype informs the user of the version of HTML-->
+<!DOCTYPE html>
+<!--The html tag defines the document as a web page-->
+<html lang="en">
+<!--The head contains information about the webpage such as title, author, style, and meta tags-->
+<head>
+  <!--This meta tag specifies the website will be written with the 8-bit character set-->
+  <meta charset="utf-8">
+  
+  <!--Links to Leaflet's Cascading Style Sheet (CSS) document-->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+  
+  <!-- Links to Esri geocoder's CSS document -->
+  <link rel="stylesheet"href="https://unpkg.com/esri-leaflet-geocoder@2.2.4/dist/esri-leaflet-geocoder.css"/>
+  
+
+    <style>
+      /*Describes the style for the html and body */
+      html, body {height: 90%; margin: 0; padding: 0}
+      /*Describes the style for the map */
+      #mapid {
+  	   position: fixed;
+  	   height: 100%;
+  	   width: 100%;
+      }
+	  
+	  
+      /*Describes the style for the map title */
+      #map-title { position: absolute; 
+				   margin-top: 1.5vw; 
+				   margin-left: 14vh; 
+				   float: left; 
+				   background: white; 
+				   padding: 6px 8px; 
+				   font-family: Helvetica; 
+				   font-weight: bold; 
+				   font-size: 2.3vw; 
+				   border-style: solid;
+				   border-color: #FFA500;
+				   z-index: 800; }
+				   
+				   	img {
+						  width:2em;
+						  height:2em;
+						  margin-top:0.4px;
+						  position:absolute;
+						}
+			
+				   
+				   
+	.fsaLabel {
+		background: #FFF8E8;
+		box-shadow: 0 0px 0px;
+		font-family: Helvetica;
+		font-weight: bold;
+		font-size: 0.8vw;
+		padding: 0em 0em;
+		opacity: 0.5;
+		
+	
+	}
+		
+	
+				   
+	.legend {
+	  	line-height: 90%;
+		color: black;
+		background: white;
+		opacity: 0.8;
+		padding: 5%;
+		font-family: Helvetica;
+		font-weight: bold;
+		font-size: 1.2vw;
+		
+      }
+	  
+	  .legend i {
+		width: 1.5vw;
+		height: 1.5vw;
+		float: left;
+		margin-right: 10px;
+		color: black;
+	  }
+	  
+	  
+	   
+				   
+				  
+	</style>
+	
+</head>
+
+<body>
+
+  <!-- Main title describes the map-->
+  <div id="map-title">Pop-up COVID-19 Vaccination Clinics by FSAs in Toronto
+  <img src=https://content.govdelivery.com/attachments/fancy_images/USVHA/2021/01/4005196/covid-vaccine-01_original.png alt="Vaccine icon">
+  </div>
+  
+  
+  <div id="mapid"></div>
+
+  <!--Links to Leaflet's javascript API-->
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+  
+  <!--Links to Esri leaflet from CDN-->
+  <script src="https://unpkg.com/esri-leaflet@2.0.8"></script>
+  
+  <!--Links to Esri leaflet Geocoder from CDN-->
+  <script src="https://unpkg.com/esri-leaflet-geocoder@2.2.4"></script>
+
+  <!--Links to jQuery Toolkit in order to import json/geojson files from a repository-->
+  <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+
+
+  <script>
+
+/////////////////////Section 1: Adding the map layer///////////////////////////////
+
+  //Instantiate the Leaflet map object using the ID of the <div> element. SetView specifies the lat,long and zoom level
+  var mymap = L.map('mapid').setView([43.7400, -79.3600], 11); 
+
+  //Creates the layercontrol variable and adds it to the map. This can be used to toggle multiple layers
+  var controlLayers = L.control.layers().addTo(mymap);
+
+  //Adds a basemap tile layer from https://leaflet-extras.github.io/leaflet-providers/preview/ and uses addTo command to add it to the map
+  
+  var Stamen_TonerLite = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.{ext}', {
+	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	subdomains: 'abcd',
+	minZoom: 0,
+	maxZoom: 20,
+	ext: 'png'
+
+  //The .addTo method adds the basemap to the map
+  }).addTo(mymap);
+  
+  
+  // Add address search tool to the map
+  var searchControl = L.esri.Geocoding.geosearch({useMapBounds:true, title:'Search for a Location'}).addTo(mymap);
+  
+  // Adding layergroups to search control
+  var results = L.layerGroup().addTo(mymap);
+  
+  searchControl.on("results", function(data){
+	results.clearLayers();
+	
+	for(var i= data.results.length - 1; i>=0; i--){
+		results.addLayer(L.marker(data.results[i].latlng));
+	}
+	
+  });
+  
+  
+  
+  /////////////////////Section 2: Adding the json/geojson layers///////////////////////////////
+  
+	/////// Add the FSA layer ///////
+	
+   //Assigns colours to each Covid-cases intervals
+   
+  function caseColor(d) {
+		return d > 5000 ? '#FF0000':
+		   d > 3000  ? '#DD7300' :
+		   d > 2000  ? '#B89E00' :
+           d > 1000  ? '#9ABB52' :
+		   d > 500  ? '#A1DECB' :
+           d > 1   ? '#F8FCB7' :
+                      '#000000';
+  }
+  
+    //This function applies the colour scheme to FSAs according to the density of Covid Cases
+  
+  function caseStyle(feature) {
+	return {
+		weight: 0.5, 
+		fillOpacity: 0.5,
+		color: 'black',
+		fillColor: caseColor(feature.properties.Covid_C)
+	}
+  };
+  
+  //This displays the FSAs in Toronto as a variable
+  var fsa;
+  //This loads the FSA geoJSON file using jQuery from github's repository
+  $.getJSON('https://raw.githubusercontent.com/farahtasneem/TorontoCovidPopups/main/Toronto_FSA.json',
+  function(json) {
+  fsa= L.geoJson(json, {
+  //This describes the style of the FSA polygons
+  style: caseStyle,
+  onEachFeature: function(feature, layer) {
+	layer.bindTooltip(feature.properties.CFSAUID, {
+		permanent:true, direction:'center', className: 'fsaLabel'});
+	}
+  
+  }).addTo(mymap);
+
+  //This adds the FSAs to the map as an overlay
+  controlLayers.addOverlay(fsa, 'Forward Sortation Areas (FSA)');
+  });
+  
+  
+  // Creating a legend for the FSAs and their case densities
+  
+  var legend = L.control({position: 'bottomright'});
+
+  legend.onAdd = function(map) {
+	// This creates an HTML element with the tagname div and classname info legend
+	var div = L.DomUtil.create('div', 'info legend');
+		label = ['<strong> Covid-19 Case Counts <br> </strong>' + '<br>' + '(Updated: April 28, 2021)' + '<br>' + '<br>'],
+		grades = [0, 1, 500, 1000, 2000, 3000, 5000];
+
+		//Loops through the case intervals and generates a label with a coloured square for each interval
+		for (var i = 0; i < grades.length; i++) {
+	
+			if (grades[i] > 0) {			
+				// The innerHTML property sets the HTML or XML markup contained in the element
+				label.push(
+					'<i style="background:' + caseColor(grades[i] + 1) + '"></i>' + 
+												// &ndash; means a dash (-)
+					grades[i] + (grades[i+1] ? ' &ndash; ' + grades[i+1] + '<br>': '+'));
+			
+			} else {
+			// The innerHTML property sets the HTML or XML markup contained in the element
+				label.push(
+				'<i style="background:' + caseColor(grades[i]) + '"></i>' + 'No Data' + '<br>')
+			}
+		}
+		
+		div.innerHTML = label.join('<br>');
+		return div;
+	};
+	
+	
+  legend.addTo(mymap);
+  
+ 		
+												
+				
+	//// Add the Pop-up Clinic layer /////			
+  
+    // This adds an interaction for highlighting the clinic when they are hovered over. This is defining an event listener for the mouseover event
+  
+  function highlightFeature(e) { //The e is short for an event object which will be passed to event handlers 
+	var layer = e.target;
+	
+	layer.setStyle({
+		weight: 4, 
+		color: '#3ae7f0',
+		dashArray: '-',
+		fillOpacity: 0.7
+	});
+
+  };
+
+  //This resets the highlighted county for the mouseout event. 
+  function resetHighlight(e) {
+	//Indicate the proposed name of the geojson file which in this case is counties
+	popups.resetStyle(e.target);
+  };
+
+  //This assigns the existing popup clinic locations as a variable
+  var popups;
+  
+  //This loads the popup clinics geoJSON file using jQuery from github's repository
+  $.getJSON('https://raw.githubusercontent.com/farahtasneem/TorontoCovidPopups/main/PopUps.json',
+  function(json) {
+  popups= L.geoJson(json, {
+  //This describes the style of the Ontario population centres polygons
+	style:{
+    "weight": 4,
+    "fillOpacity": 0.1,
+	"border-width": 1.5,
+	"color": '#84FFF2'},
+	onEachFeature: function(feature, layer) {
+	  layer.bindPopup("<strong>" +'Location(s): '+  "</strong>"  + feature.properties.Address + '<br>' + "<strong>" + 'Date(s): '+  "</strong>" + feature.properties.Date)
+	  layer.on({
+		mouseover: highlightFeature,
+		mouseout: resetHighlight		
+	  })
+	}
+	
+	});
+	
+  //This adds the Ontario population centres feature to the map as an overlay
+  controlLayers.addOverlay(popups, 'Pop-up Vaccination Clinics');
+  }); 
+  
+  // Create Layer groups
+  
+  var allLayers = L.layerGroup([popups]);
+  
+  var overlays = {
+	"layer1":allLayers
+	}
+	
+ // Add layer controls 
+  
+  L.control.layers(null, overlays).addTo(mymap);
+  
+  
+  
+  //These indicate the end tags of script, body and html
+  </script>
+</body>
+</html>
+
+  
+  
+  
+  
+
+				
+  
+				   
