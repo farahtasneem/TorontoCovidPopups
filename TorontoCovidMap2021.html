@@ -7,6 +7,17 @@
   <!--This meta tag specifies the website will be written with the 8-bit character set-->
   <meta charset="utf-8">
   
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJNT1VTS1M"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-NJNT1VTS1M');
+	  
+  </script>
+
   <!--Links to Leaflet's Cascading Style Sheet (CSS) document-->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
   
@@ -28,7 +39,8 @@
       /*Describes the style for the map title */
       #map-title { position: absolute; 
 				   margin-top: 1.5vw; 
-				   margin-left: 14vh; 
+				   margin-left: 8vw;
+				   margin-right: 20vw;
 				   float: left; 
 				   background: white; 
 				   padding: 6px 8px; 
@@ -37,6 +49,7 @@
 				   font-size: 2.3vw; 
 				   border-style: solid;
 				   border-color: #FFA500;
+				   border-width: 4px;
 				   z-index: 800; }
 				   
 				   	img {
@@ -71,6 +84,8 @@
 		font-family: Helvetica;
 		font-weight: bold;
 		font-size: 1.2vw;
+
+		
 		
       }
 	  
