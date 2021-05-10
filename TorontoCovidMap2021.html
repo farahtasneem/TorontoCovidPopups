@@ -222,7 +222,7 @@
   legend.onAdd = function(map) {
 	// This creates an HTML element with the tagname div and classname info legend
 	var div = L.DomUtil.create('div', 'info legend');
-		label = ['<strong> Covid-19 Case Counts <br> </strong>' + '<br>' + '(Updated: April 28, 2021)' + '<br>' + '<br>'],
+		label = ['<strong> Covid-19 Case Counts <br> </strong>' + '<br>' + '(Updated: May 6, 2021)' + '<br>' + '<br>'],
 		grades = [0, 1, 500, 1000, 2000, 3000, 5000];
 
 		//Loops through the case intervals and generates a label with a coloured square for each interval
@@ -298,7 +298,7 @@
 	});
 	
   //This adds the Ontario population centres feature to the map as an overlay
-  controlLayers.addOverlay(popups, 'Pop-up Vaccination Clinics');
+  controlLayers.addOverlay(popups, 'Covid-19 Vaccination Sites');
   }); 
   
   // Create Layer groups
